@@ -12,29 +12,37 @@
     .container {
       padding: 10px;
     }
+    .tabs-wrapper {
+      display: flex;
+      justify-content: space-between;
+    }
     .tabs {
       background: rgba(255,255,255,.1);
       border: 1px solid rgba(255,255,255,.2);
       border-radius: 6px;
       display: flex;
       justify-content: space-between;
-      padding: 1px;
     }
     .tab {
-      color: rgba(255,255,255,0.3);
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      color: rgba(255,255,255,0.8);
+      cursor: pointer;
       flex: 1;
       font-family: "Inter", Helvetica, Arial, sans-serif;
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 2px 6px;
       text-align: center;
-      color: white;
-      cursor: pointer;
-      border-radius: 4px;
     }
     .tab.active {
-      background: rgba(255,255,255,0.7);
+      background: rgba(255,255,255,0.8);
       color: rgba(0,0,0,1);
+    }
+    .tab-container {
+      display: flex;
+      justify-content: center;
     }
     button {
       border: none;
@@ -63,9 +71,9 @@
       font-family: monospace;
       font-size: 12px;
       line-height: 150%;
-      margin-bottom: 12px;
+      margin: 12px 0;
       padding: 8px;
-      height: 90px;
+      height: 100px;
       overflow-y: scroll;
       white-space: pre-wrap;
     }
@@ -88,41 +96,88 @@
       top: -9999px;
     }
   </style>
+  
 </head>
 <body>
   <div class="container">
-    <div class="tabs">
-      <div class="tab active" data-format="hex">Hex</div>
-      <div class="tab" data-format="rgba">RGBA</div>
-    </div>
+      <div class="tabs-wrapper">
+      <!-- Color format tabs -->
+      <div id="color-format-tabs" class="tabs-format">
+        <span class="tab active" id="hex-tab">Hex</span>
+        <span class="tab" id="rgba-tab">RGBA</span>
+      </div>
+      <!-- Display format tabs -->
+      <div id="display-format-tabs" class="tabs-type">
+        <span class="tab active" id="list-tab">List</span>
+        <span class="tab" id="json-tab">JSON</span>
+      </div>
+  </div>
     <pre id="output">Select something!</pre>
     <button id="copy-values" class="primary">Copy to clipboard</button>
     <span class="feedback" id="copy-feedback">Copied to your clipboard!</span>
-
-    <!-- Hidden textarea for clipboard copying -->
     <textarea id="clipboard-textarea"></textarea>
   </div>
 
   <script>
-    const tabs = document.querySelectorAll('.tab');
-    const outputElement = document.getElementById('output');
+    // Default active states
+    let activeColorFormat = 'hex'; // Default color format
+    let activeDisplayFormat = 'list'; // Default display format
 
-    // Handle tab click
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        // Remove active class from all tabs
-        tabs.forEach(t => t.classList.remove('active'));
-        // Add active class to the clicked tab
-        tab.classList.add('active');
+    // Function to update the <pre> content based on the current active formats
+    function updateOutput(colorValues) {
+      const outputElement = document.getElementById('output');
+      if (activeDisplayFormat === 'json') {
+        const jsonData = colorValues.map(item => ({
+          name: item.name,
+          value: item.value
+        }));
+        outputElement.innerText = JSON.stringify(jsonData, null, 2);
+      } else { // 'list' display format
+        outputElement.innerText = colorValues.map(item => item.value).join(', ');
+      }
+    }
 
-        // Get the format from the clicked tab
-        const format = tab.getAttribute('data-format');
-        parent.postMessage({ pluginMessage: { type: 'set-format', format } }, '*');
-      });
-    });
+    // Function to set the active color format tab
+    function setActiveColorFormatTab(tabId) {
+      const colorTabs = document.querySelectorAll('#color-format-tabs .tab');
+      colorTabs.forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      activeColorFormat = tabId === 'hex-tab' ? 'hex' : 'rgba';
+      parent.postMessage({ pluginMessage: { type: 'set-format', format: activeColorFormat } }, '*');
+    }
 
+    // Function to set the active display format tab
+    function setActiveDisplayFormatTab(tabId) {
+      const displayTabs = document.querySelectorAll('#display-format-tabs .tab');
+      displayTabs.forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      activeDisplayFormat = tabId === 'list-tab' ? 'list' : 'json';
+      updateOutput(currentColorValues); // Update the output to match the new display format
+    }
+
+    // Set event listeners for color format tabs
+    document.getElementById('hex-tab').onclick = () => setActiveColorFormatTab('hex-tab');
+    document.getElementById('rgba-tab').onclick = () => setActiveColorFormatTab('rgba-tab');
+
+    // Set event listeners for display format tabs
+    document.getElementById('list-tab').onclick = () => setActiveDisplayFormatTab('list-tab');
+    document.getElementById('json-tab').onclick = () => setActiveDisplayFormatTab('json-tab');
+
+    // Track the current color values to update the output as needed
+    let currentColorValues = [];
+
+    // Listen for messages from the plugin
+    onmessage = (event) => {
+      const message = event.data.pluginMessage;
+      if (message.type === 'colors-in-format') {
+        currentColorValues = message.colorValues;
+        updateOutput(currentColorValues); // Update the initial output
+      }
+    };
+
+    // Copy to clipboard function
     document.getElementById('copy-values').onclick = () => {
-      const outputText = outputElement.innerText;
+      const outputText = document.getElementById('output').innerText;
 
       if (outputText.trim() !== "Select something!" && outputText.trim() !== "") {
         const clipboardTextarea = document.getElementById('clipboard-textarea');
@@ -136,15 +191,9 @@
         setTimeout(() => {
           feedback.style.visibility = 'hidden';
         }, 2000);
-      }
-    };
-
-    onmessage = (event) => {
-      const message = event.data.pluginMessage;
-      if (message.type === 'colors-in-format') {
-        outputElement.innerText = message.colorValues.length > 0
-          ? message.colorValues.join(', ')
-          : 'No colors found in the selection.';
+      } else {
+        const feedback = document.getElementById('copy-feedback');
+        feedback.style.visibility = 'hidden';
       }
     };
   </script>

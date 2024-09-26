@@ -14,10 +14,15 @@ function alphaToHex(a: number): string {
   return alphaHex.length === 1 ? "0" + alphaHex : alphaHex;
 }
 
+// Function to convert RGB to RGBA
+function rgbToRgba(r: number, g: number, b: number, a: number): string {
+  return `rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)}, ${a.toFixed(2)})`;
+}
+
 // Function to get colors from the selection based on format
 function getColors(format: string) {
   const selection = figma.currentPage.selection;
-  let colorValues: string[] = [];
+  let colorValues: { name: string, value: string }[] = [];
 
   selection.forEach((node) => {
     if ("fills" in node && Array.isArray(node.fills)) {
@@ -36,16 +41,14 @@ function getColors(format: string) {
               }
               break;
             case 'rgba':
-              // Round the opacity to two decimal places
-              const roundedOpacity = Math.round(opacity * 100) / 100;
-              colorValue = `rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)}, ${roundedOpacity})`;
+              colorValue = rgbToRgba(r, g, b, opacity);
               break;
             default:
               colorValue = '';
           }
 
           if (colorValue) {
-            colorValues.push(colorValue);
+            colorValues.push({ name: node.name, value: colorValue });
           }
         }
       });
