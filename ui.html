@@ -87,9 +87,35 @@
       background: rgba(0, 2, 61, 0.3);
       color: #EBFFFF; /* Optional: Change text color on hover */
     }
-    #copy-values {
+    button.primary:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+    button.primary:disabled:hover {
+      background: rgba(255,255,255,.1);
+      color: white;
+    }
+    .button-row {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
       margin-top: auto;
       flex-shrink: 0;
+    }
+    button.icon-button {
+      width: 40px;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+button.icon-button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+    button.icon-button svg {
+      width: 20px;
+      height: 20px;
     }
     .output-container {
       margin: 12px 0;
@@ -257,7 +283,12 @@
       <ul class="output-list" id="output-list" aria-hidden="true"></ul>
       <pre class="output-pre" id="output-pre" aria-hidden="true">Select something!</pre>
     </div>
-    <button id="copy-values" class="primary">Copy all to clipboard</button>
+    <div class="button-row">
+      <button type="button" id="create-frame" class="primary icon-button" title="Create frame on canvas">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" x2="2" y1="6" y2="6"/><line x1="22" x2="2" y1="18" y2="18"/><line x1="6" x2="6" y1="2" y2="22"/><line x1="18" x2="18" y1="2" y2="22"/></svg>
+      </button>
+      <button id="copy-values" class="primary">Copy all to clipboard</button>
+    </div>
     <span class="feedback" id="copy-feedback">Copied to your clipboard!</span>
     <textarea id="clipboard-textarea"></textarea>
   </div>
@@ -313,6 +344,11 @@
           preEl.innerText = JSON.stringify(jsonData, null, 2);
         }
         document.getElementById('copy-values').textContent = 'Copy to clipboard';
+      }
+      const noContent = colorValues.length === 0;
+      document.getElementById('create-frame').disabled = noContent;
+      document.getElementById('copy-values').disabled = noContent;
+      if (activeDisplayFormat === 'json') {
         return;
       }
 
@@ -336,7 +372,13 @@
       }
       document.getElementById('copy-values').textContent = 'Copy all to clipboard';
 
-      if (colorValues.length === 0) return;
+      if (colorValues.length === 0) {
+        document.getElementById('create-frame').disabled = true;
+        document.getElementById('copy-values').disabled = true;
+        return;
+      }
+      document.getElementById('create-frame').disabled = false;
+      document.getElementById('copy-values').disabled = false;
 
       colorValues.forEach(item => {
         const li = document.createElement('li');
@@ -404,6 +446,13 @@
     document.getElementById('copy-values').onclick = () => {
       if (currentColorValues.length === 0) return;
       copyToClipboard(getCopyableText(currentColorValues));
+    };
+
+    // Create frame on canvas
+    const createFrameBtn = document.getElementById('create-frame');
+    createFrameBtn.onclick = () => {
+      if (currentColorValues.length === 0) return;
+      parent.postMessage({ pluginMessage: { type: 'create-frame', colorValues: currentColorValues } }, '*');
     };
   </script>
 </body>
