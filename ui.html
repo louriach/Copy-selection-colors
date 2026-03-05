@@ -3,14 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <style>
+    html {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
     body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
       background-color: #00023D;
       background: linear-gradient(180deg, #1C567C 0%, #023B68 100%);
       font-family: sans-serif;
-      overflow: hidden;
+      box-sizing: border-box;
     }
     .container {
+      flex: 1;
+      min-height: 0;
       padding: 10px;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
     }
     .tabs-wrapper {
       display: flex;
@@ -24,21 +39,29 @@
       justify-content: space-between;
     }
     .tab {
-      background-color: rgba(255, 255, 255, 0.1);
+      /* background-color: rgba(255, 255, 255, 0.1); */
       border-radius: 5px;
-      border: 1px solid rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       color: rgba(255,255,255,0.8);
       cursor: pointer;
       flex: 1;
       font-family: "Inter", Helvetica, Arial, sans-serif;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 500;
       padding: 2px 6px;
       text-align: center;
     }
+    .tab:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 1);
+    }
     .tab.active {
-      background: rgba(255,255,255,0.8);
-      color: rgba(0,0,0,1);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      color: rgba(255, 255, 255, 1);
+      cursor: default;
+    }
+    .tab.active:hover {
+      background-color: transparent;
     }
     .tab-container {
       display: flex;
@@ -49,7 +72,7 @@
       border-radius: 9px;
       font-family: "Inter", Helvetica, Arial, sans-serif;
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 500;
       padding: 8px 10px;
       width: 100%;
     }
@@ -64,18 +87,124 @@
       background: rgba(0, 2, 61, 0.3);
       color: #EBFFFF; /* Optional: Change text color on hover */
     }
-    pre {
-      background-color: rgba(255,255,255,.8);
-      border: 1px solid rgba(255,255,255,.6);
+    #copy-values {
+      margin-top: auto;
+      flex-shrink: 0;
+    }
+    .output-container {
+      margin: 12px 0;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+    }
+    .output-container--json {
       border-radius: 9px;
+      border: 1px solid rgba(255,255,255,.6);
+      background-color: rgba(255,255,255,.8);
+    }
+    .output-container--list {
+      /* List is a replacement for the text field: no box, rows on page background */
+    }
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 24px 16px;
+      text-align: center;
+      min-height: 120px;
+    }
+    .empty-state__icon {
+      width: 48px;
+      height: 48px;
+      color: rgba(255, 255, 255, 0.5);
+      flex-shrink: 0;
+    }
+    .empty-state__text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .empty-state__title {
+      font-family: "Inter", Helvetica, Arial, sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+      margin: 0;
+    }
+    .empty-state__hint {
+      font-family: "Inter", Helvetica, Arial, sans-serif;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.5);
+      margin: 0;
+      line-height: 1.4;
+    }
+    .output-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .output-list-row {
+      display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 2px 2px 2px 12px;
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.95);
+    border-radius: 9px;
+    margin: 0 0 2px;
+    border: 1px solid rgba(255, 255, 255, .1);
+    }
+    .output-list-row:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .output-list-row .row-value {
+      flex: 1;
+      min-width: 0;
+      word-break: break-all;
+    }
+    .output-list-row .row-copy {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      color: rgba(255,255,255,0.7);
+      opacity: 0;
+      transition: opacity 0.15s ease, background 0.15s ease;
+    }
+    .output-list-row:hover .row-copy {
+      opacity: 1;
+    }
+    .output-list-row .row-copy:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #EBFFFF;
+    }
+    .output-list-row .row-copy svg {
+      width: 22px;
+      height: 22px;
+    }
+    pre.output-pre {
       font-family: monospace;
       font-size: 12px;
       line-height: 150%;
-      margin: 12px 0;
+      margin: 0;
       padding: 8px;
-      height: 100px;
-      overflow-y: scroll;
+      height: 100%;
+      overflow-y: auto;
       white-space: pre-wrap;
+      box-sizing: border-box;
+      border: none;
+      background: transparent;
     }
     .feedback {
       background-color: rgba(235, 255, 239, 0.9);
@@ -112,8 +241,23 @@
         <span class="tab" id="json-tab">JSON</span>
       </div>
   </div>
-    <pre id="output">Select something!</pre>
-    <button id="copy-values" class="primary">Copy to clipboard</button>
+    <div class="output-container" id="output-container">
+      <div class="empty-state" id="empty-state" aria-hidden="true">
+        <svg class="empty-state__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="4" y="4" width="6" height="6" rx="1"/>
+          <rect x="14" y="4" width="6" height="6" rx="1"/>
+          <rect x="4" y="14" width="6" height="6" rx="1"/>
+          <rect x="14" y="14" width="6" height="6" rx="1"/>
+        </svg>
+        <div class="empty-state__text">
+          <h2 class="empty-state__title">Select anything!</h2>
+          <p class="empty-state__hint">Select a shape or frame with fills to copy its colors here.</p>
+        </div>
+      </div>
+      <ul class="output-list" id="output-list" aria-hidden="true"></ul>
+      <pre class="output-pre" id="output-pre" aria-hidden="true">Select something!</pre>
+    </div>
+    <button id="copy-values" class="primary">Copy all to clipboard</button>
     <span class="feedback" id="copy-feedback">Copied to your clipboard!</span>
     <textarea id="clipboard-textarea"></textarea>
   </div>
@@ -123,18 +267,96 @@
     let activeColorFormat = 'hex'; // Default color format
     let activeDisplayFormat = 'list'; // Default display format
 
-    // Function to update the <pre> content based on the current active formats
-    function updateOutput(colorValues) {
-      const outputElement = document.getElementById('output');
+    const COPY_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
+
+    function getCopyableText(colorValues) {
       if (activeDisplayFormat === 'json') {
-        const jsonData = colorValues.map(item => ({
-          name: item.name,
-          value: item.value
-        }));
-        outputElement.innerText = JSON.stringify(jsonData, null, 2);
-      } else { // 'list' display format
-        outputElement.innerText = colorValues.map(item => item.value).join(', ');
+        const jsonData = colorValues.map(item => ({ name: item.name, value: item.value }));
+        return JSON.stringify(jsonData, null, 2);
       }
+      return colorValues.map(item => item.value).join(', ');
+    }
+
+    function showCopyFeedback() {
+      const feedback = document.getElementById('copy-feedback');
+      feedback.style.visibility = 'visible';
+      setTimeout(() => { feedback.style.visibility = 'hidden'; }, 2000);
+    }
+
+    function copyToClipboard(text) {
+      const clipboardTextarea = document.getElementById('clipboard-textarea');
+      clipboardTextarea.value = text;
+      clipboardTextarea.select();
+      document.execCommand('copy');
+      showCopyFeedback();
+    }
+
+    // Function to update the output based on the current active formats
+    function updateOutput(colorValues) {
+      const containerEl = document.getElementById('output-container');
+      const listEl = document.getElementById('output-list');
+      const preEl = document.getElementById('output-pre');
+
+      if (activeDisplayFormat === 'json') {
+        containerEl.classList.remove('output-container--list');
+        containerEl.classList.add('output-container--json');
+        document.getElementById('empty-state').setAttribute('aria-hidden', 'true');
+        document.getElementById('empty-state').style.display = 'none';
+        listEl.setAttribute('aria-hidden', 'true');
+        listEl.style.display = 'none';
+        preEl.setAttribute('aria-hidden', 'false');
+        preEl.style.display = 'block';
+        if (colorValues.length === 0) {
+          preEl.innerText = 'Select something!';
+        } else {
+          const jsonData = colorValues.map(item => ({ name: item.name, value: item.value }));
+          preEl.innerText = JSON.stringify(jsonData, null, 2);
+        }
+        document.getElementById('copy-values').textContent = 'Copy to clipboard';
+        return;
+      }
+
+      // List display format: one row per color with copy-on-hover (replacement for text field, no box)
+      containerEl.classList.remove('output-container--json');
+      containerEl.classList.add('output-container--list');
+      preEl.setAttribute('aria-hidden', 'true');
+      preEl.style.display = 'none';
+      const emptyStateEl = document.getElementById('empty-state');
+      if (colorValues.length === 0) {
+        emptyStateEl.setAttribute('aria-hidden', 'false');
+        emptyStateEl.style.display = 'flex';
+        listEl.setAttribute('aria-hidden', 'true');
+        listEl.style.display = 'none';
+      } else {
+        emptyStateEl.setAttribute('aria-hidden', 'true');
+        emptyStateEl.style.display = 'none';
+        listEl.setAttribute('aria-hidden', 'false');
+        listEl.style.display = 'block';
+        listEl.innerHTML = '';
+      }
+      document.getElementById('copy-values').textContent = 'Copy all to clipboard';
+
+      if (colorValues.length === 0) return;
+
+      colorValues.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'output-list-row';
+        const valueSpan = document.createElement('span');
+        valueSpan.className = 'row-value';
+        valueSpan.textContent = item.value;
+        const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
+        copyBtn.className = 'row-copy';
+        copyBtn.title = 'Copy this color';
+        copyBtn.innerHTML = COPY_ICON_SVG;
+        copyBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          copyToClipboard(item.value);
+        });
+        li.appendChild(valueSpan);
+        li.appendChild(copyBtn);
+        listEl.appendChild(li);
+      });
     }
 
     // Function to set the active color format tab
@@ -166,6 +388,9 @@
     // Track the current color values to update the output as needed
     let currentColorValues = [];
 
+    // Initialize output on load so list view empty state has correct styling (white text, border)
+    updateOutput(currentColorValues);
+
     // Listen for messages from the plugin
     onmessage = (event) => {
       const message = event.data.pluginMessage;
@@ -175,26 +400,10 @@
       }
     };
 
-    // Copy to clipboard function
+    // Copy all to clipboard
     document.getElementById('copy-values').onclick = () => {
-      const outputText = document.getElementById('output').innerText;
-
-      if (outputText.trim() !== "Select something!" && outputText.trim() !== "") {
-        const clipboardTextarea = document.getElementById('clipboard-textarea');
-        clipboardTextarea.value = outputText;
-        clipboardTextarea.select();
-        document.execCommand('copy');
-
-        const feedback = document.getElementById('copy-feedback');
-        feedback.style.visibility = 'visible';
-
-        setTimeout(() => {
-          feedback.style.visibility = 'hidden';
-        }, 2000);
-      } else {
-        const feedback = document.getElementById('copy-feedback');
-        feedback.style.visibility = 'hidden';
-      }
+      if (currentColorValues.length === 0) return;
+      copyToClipboard(getCopyableText(currentColorValues));
     };
   </script>
 </body>

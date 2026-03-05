@@ -1,4 +1,4 @@
-figma.showUI(__html__, { width: 240, height: 240 });
+figma.showUI(__html__, { width: 240, height: 320 });
 
 // Function to convert RGB to Hex
 function rgbToHex(r: number, g: number, b: number): string {
